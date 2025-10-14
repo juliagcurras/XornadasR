@@ -1,0 +1,342 @@
+---
+title: "Da abundancia á evidencia: fluxo de traballo para a análise diferencial de datos ómicos en R"
+subtitle: "Xornadas de R"
+author: "Julia García Currás"
+institute: "Biostatech | CITIC-UDC"
+date: "16/10/2025"
+output:
+  xaringan::moon_reader:
+    css: [default, metropolis, metropolis-fonts]
+    self_contained: true
+    lib_dir: libs
+    nature:
+      highlightStyle: github
+      highlightLines: true
+      countIncrementalSlides: false
+      ratio: "16:9"
+---
+
+class: inverse, center, middle
+
+```{css echo = F}
+/* Evita que aparezca el cursor parpadeante en títulos o texto */
+.remark-slide-content:focus {
+  outline: none !important;
+}
+
+/* Asegura que los encabezados no sean "enfocables" */
+h1:focus,
+h2:focus,
+h3:focus,
+p:focus {
+  outline: none !important;
+}
+```
+
+```{r echo = FALSE}
+knitr::opts_chunk$set(dev.args = list(bg = "transparent"))
+
+js <- c(
+"function(row, data, num, index){",
+"  var $row = $(row);",
+"  if($row.hasClass('even')){",
+"    $row.css('background-color', 'white');",
+"    $row.hover(function(){",
+"      $(this).css('background-color', 'lightgrey');",
+"     }, function(){",
+"      $(this).css('background-color', 'white');",
+"     }",
+"    );",  
+"  }else{",
+"    $row.css('background-color', '#EDFDFA');",
+"    $row.hover(function(){",
+"      $(this).css('background-color', 'lightgrey');",
+"     }, function(){",
+"      $(this).css('background-color', '#EDFDFA');",
+"     }",
+"    );",  
+"  }",
+"}"  
+)
+```
+
+# Introdución
+
+---
+
+
+# As ómicas
+
+
+<span style="font-size: 1.5em;">Nova disciplina en bioloxía que estuda, de maneira global e masiva, diferentes moléculas dun organismo.</span>
+
+- Xéranse datos biolóxicos de grande dimensionalidade que requiren dunha **análise estatística**: **R software**.
+
+- Tipos de moléculas e as súas correspondentes ómicas: 
+
+--
+
+```{r echo = F, out.width="90%", dev='svg', fig.align='center'}
+knitr::include_graphics(path = "Figures/TypesOfOmics.svg")
+```
+
+---
+
+# R e as ómicas
+
+<span style="font-size: 1.5em;">Vantaxes do uso de R na análise de datos ómicos:</span>
+
+
+* Software libre e gratuíto
+
+--
+
+* Ampla e activa comunidade de usuarios:
+
+    * Desenvolvemento, mantemento e mellora constante dos diferentes paquetes de análise
+
+--
+
+* Estandarización e reproducibilidade de análises 
+
+--
+
+* Código aberto e compartido:
+
+    * Transparencia
+    
+    * Flexibilidade
+
+--
+
+```{r echo = F, out.width="80%", dev='svg', fig.align='center'}
+knitr::include_graphics(path = "Figures/bioconductor_2.svg")
+```
+
+
+---
+
+class: inverse, center, middle
+
+# Análise de abundancia diferencial
+
+---
+
+# Deseño experimental común
+
+
+![](Figures/DesenhoExperimental.svg)
+
+---
+
+# Fluxo de análise xeral
+
+
+![](Figures/Pipeline.svg)
+
+
+```{r echo = F, include = F, message = F, eval=require('dplyr')}
+out <- readRDS(file = "DataExample/rawDataMatrix.rds")
+dataMatrix <- out$dataMatrix
+designMatrix <- out$designMatrix
+
+df <- as.data.frame(table(designMatrix$Groups))
+colnames(df) <- c("Grupo", "N")
+
+library(dplyr)
+library(ggplot2)
+
+df <- df %>%
+  mutate(
+    Porcentaje = N / sum(N) * 100,
+    etiqueta = paste0(Grupo, " (N=", N, ")"),
+    ypos = cumsum(N) - 0.5*N
+  )
+
+df$Grupo <- factor(df$Grupo)
+# plot sector
+```
+
+```{r include = F, echo=F}
+ggplot(df, aes(x = "", y = N, fill = Grupo)) +
+  geom_bar(width = 1, stat = "identity", color = "white") +
+  coord_polar(theta = "y", ) +     # Esto lo convierte en pie chart
+  geom_text(aes(y = ypos, label = etiqueta), color = "white", size = 8) +
+  theme_void() + 
+  theme(legend.position = "none") +
+  scale_fill_manual(values = c("DM" = "#9EBFC6",
+                               "NC" = "#23373B"))
+```
+
+---
+
+# Exemplo
+
+```{r echo = F, out.width="95%", dev='svg', fig.align='center'}
+knitr::include_graphics(path = "Figures/DatosExmplo.svg")
+```
+
+
+.footnote[
+<span style="font-size: 0.8em;">Chen, R.; Yi, Y.; Xiao, W.; Zhong, B.; Shu, Y.; Zhang, L.; Zeng, Y. Label-Free Liquid Chromatography-Mass Spectrometry Proteomic Analysis of Urinary Identification in Diabetic Vascular Dementia in a Han Chinese Population. _Front Aging Neurosci_ 2021, 13, 619945. https://doi.org/10.3389/fnagi.2021.619945.</span>
+]
+<!-- Dataset público do estudo [Chen et al., 2021](https://doi.org/10.3389/fnagi.2021.619945). -->
+
+---
+
+# Preprocesado
+
+1. **Transformación logarítima** da matriz de datos.
+
+--
+
+2. **Análise de datos faltantes**:
+  * **Filtrado**: eliminación de proteínas con moitos valores faltantes. Recomendación: **filtrar por grupos**. 
+  * **Imputación**: substitución de valores faltantes por valores estimados. Paquetes: `impute` *K-nearest neighbours*, `pcaMethods::pca(..., methods = "")` (ambos de Bioconductor).
+
+--
+    
+3. **Normalización** para reducir o erro sistemático presente nos datos:
+  * Diferentes tipos de normalización: *quantile*, *VSN*, *CyclicLoess*.
+  * Paquetes: `vsn::justvsn`, `preprocessCore::normalize.quantiles`, `limma::normalizeCyclicLoess`.
+  * `NormalyzerDE`: múltiples normalizacións + gráficos e métricas para avaliar o mellor
+
+---
+
+# Preprocesado - Exemplo
+
+```{r echo =F}
+totalCell <- nrow(dataMatrix)*ncol(dataMatrix)
+naDM <- dataMatrix %>% dplyr::select(DM1:DM22) %>% is.na(.) %>% sum() 
+totalCellDM <- nrow(dataMatrix)*22
+totalCellNC <- nrow(dataMatrix)*21
+naNC <- dataMatrix %>% dplyr::select(NC1:NC21) %>% is.na(.) %>% sum() 
+
+```
+
+
+1. Datos faltantes: 
+
+  * Total: `r round((sum(is.na(dataMatrix))/totalCell)*100, 2)` %
+    
+  * Por grupo: `r round((naNC/totalCellNC)*100, 2)`% en NC e `r round((naDM/totalCellDM)*100, 2)`% en DM
+    
+    
+![](Figures/naHeatmap.png)
+
+
+```{r fig.height=6, fig.width=10, dev='svg', echo = FALSE}
+# image(!is.na(as.matrix(dataMatrix)), col = c("grey", "#23373B"), 
+#       axes = FALSE, ylab = "Mostras", xlab="Proteínas")
+```
+
+
+---
+
+# Comparacións entre grupos
+
+1. **Comparación** da cantidade de cada molécula entre grupos mediante:
+
+  * Probas clásicas: t-test, Welch-test (`stats::t.test`).
+  * Modelos lineais: `DESeq2`, `limma`.
+
+--
+
+2. **Corrección do p-valor** por comparacións múltiples:
+  * `stats::p.adjust(..., methods)` con diferentes métodos: `stats::p.adjust.methods`.
+
+--
+    
+3. Cálculo do $log_2$ _fold change_ ou $logFC$:
+
+$$log_2FC = log_2{(\frac{mean_{Case}(molecule_1)}{mean_{Control}(molecule_1)})}$$
+
+--
+    
+4. Representación: gráfico de tipo volcán ou **volcano plot**.
+
+---
+
+# Análise de agrupación
+
+As moléculas con abundancia diferencial permiten discriminar entre os grupos de estudo no seu conxunto?
+
+* Análise de compoñentes principais (PCA): `stats::princomp`, `pcaMethods::pca`. 
+
+    * Representación gráfica: `factoextra`.
+    
+--
+
+* Clustering xerárquico: `stats::dist` e `stats::hclus`
+
+    * Representación gráfica: `stats::heatmap`, `heatmaply`, `dendextend`, `circlize`.
+    
+
+---
+
+# Análise funcional
+
+Permite coñecer aquelas funcións asociadas a moléculas con abundancia diferencial. Dise que estás funcións están sobrerrepresentadas nos resultados. 
+
+* Base de datos de termos funcionais: relación molécula - función.
+* Lista de moléculas: significativas e non significativas. 
+
+```{r echo = F}
+df <- data.frame(
+  Moléculas = c("Significativas", "No significativas", "Total"),
+  FunciónA = paste0(paste0("n<sub>", c("11", "21", "+1")), "</sub>"),
+  SinFunciónA = paste0(paste0("n<sub>", c("12", "22", "+2")), "</sub>"),
+  Total = paste0(paste0("n<sub>", c("1+", "2+", "")), "</sub>")
+)
+colnames(df) <- c("Moléculas", "Función A", "Sin función A", "Total")
+```
+
+
+```{r include = T, echo = F, fig.height=4, fig.width=5}
+DT::datatable(df, extensions = "Buttons", rownames = F, escape = F,
+              options = list(ordering = F, dom = "rt", scrollY = F,
+                            scrollX = F, pageLength = nrow(df),
+                            columnDefs = list(list(className = 'dt-center', targets = '_all')),
+                            full_width = TRUE)) %>% 
+DT::formatStyle(1, font = 'bold')
+
+```
+
+--
+
+* Constraste: test $\chi^2$ de Pearson ou test hiperxeométrico. 
+    * Paquetes: `clusterProfiler`, `AnnotationDbi`, `enrichplot`.
+
+
+
+---
+
+# Avaliación da capacidade de discriminación
+
+Adestrar modelos de aprendizaxe automática usando estratexias de train-test e validación cruzada para avaliar a capacidade de clasificación de cada molécula respecto aos grupos de estudo. 
+
+* Limitación: require dun N elevado, sendo pouco común neste tipo de estudos
+* Paquetes: `caret`, `glmnet`, `randomForest`
+
+
+---
+
+class: center, middle, inverse
+
+# Conclusións
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
