@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="720" height="512" version="1.1" viewBox="0 0 90 64" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+  <defs>
+    <path id="char40" d="M1339 0H1141V729H398V0H200V1489H398V905H1141V1489H1339V0Z"/>
+    <path id="char46" d="M1336 0H1091L385 1332V0H200V1489H507L1151 273V1489H1336V0Z"/>
+    <path id="char47" d="m1310 1318q91-100 139-245t49-329q0-184-49-329t-139-243q-92-101-217-152t-287-51q-157 0-285 52t-219 151q-90 99-138 243t-49 329q0 182 48 326t140 248q88 98 218 150t285 52q160 0 287-52t217-150zm-18-574q0 290-130 447t-355 158q-227 0-356-157t-130-448q0-293 132-448t354-156q222 0 353 155t132 449z"/>
+  </defs>
+  <g stroke="#000" stroke-linecap="round" stroke-width="1.5">
+    <line x1="29.6866" x2="39.1052" y1="46.9165" y2="41.4787"/>
+    <line x1="55.344" x2="64.7626" y1="41.4787" y2="46.9165"/>
+    <line x1="49.2246" x2="49.2246" y1="26.9074" y2="16.677"/>
+    <line x1="45.2246" x2="45.2246" y1="26.9074" y2="16.677"/>
+  </g>
+  <g transform="translate(14.947 58.8688)">
+    <g transform="scale(.0078125 -.0078125)">
+      <use fill="#000000" xlink:href="#char47"/>
+    </g>
+  </g>
+  <g transform="translate(41.2402 43.8688)">
+    <g transform="scale(.0078125 -.0078125)">
+      <use fill="#000000" xlink:href="#char46"/>
+    </g>
+  </g>
+  <g transform="translate(66.9085 58.8688)">
+    <g transform="scale(.0078125 -.0078125)">
+      <use fill="#000000" xlink:href="#char47"/>
+    </g>
+  </g>
+  <g transform="translate(40.9277 13.8688)">
+    <g transform="scale(.0078125 -.0078125)">
+      <use fill="#000000" xlink:href="#char47"/>
+    </g>
+  </g>
+  <g transform="translate(3 58.8688)">
+    <g transform="scale(.0078125 -.0078125)">
+      <use width="100%" height="100%" fill="#000000" xlink:href="#char40"/>
+    </g>
+  </g>
+  <g transform="translate(-4)" stroke="#000" stroke-linecap="round" stroke-width="1.4">
+    <line x1="57.8192" x2="63.8192" y1="30.4517" y2="30.4517"/>
+    <line x1="60.8192" x2="60.8192" y1="27.4517" y2="33.4517"/>
+    <line x1="82.812" x2="88.812" y1="45.8725" y2="45.8725"/>
+  </g>
+</svg>
