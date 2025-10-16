@@ -1,0 +1,16 @@
+.remark-slide-content {
+  font-size: 1.35em; /* más grande */
+  line-height: 1.4
+}
+
+.remark-slide-content:focus {
+  outline: none !important;
+}
+
+/* Asegura que los encabezados no sean "enfocables" */
+h1:focus,
+h2:focus,
+h3:focus,
+p:focus {
+  outline: none !important;
+}
